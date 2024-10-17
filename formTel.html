@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>formTel</title>
+    <link href="formTel.css" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="content">
+        <h2 class="enterace">Вход</h2>
+        <p class="text">Введите номер телефона для входа<br>в личный кабинет</p>
+        <form id="formach" action="formCode.html" method="get">
+            <input class="tel" type="number" name="phone" id="tel" placeholder="Телефон" required
+                oninvalid="this.setCustomValidity('Поле является обязательным')" oninput="setCustomValidity('')">
+        </form>
+        <button type="submit" form="formach">Продолжить</button>
+
+    </div>
+
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    const formach = document.getElementById("formach");
+    formach.addEventListener("submit", handleSubmit);
+
+    async function handleSubmit(e) {
+        const formData = new FormData(e.target);
+        const formProps = Object.fromEntries(formData);
+
+        try {
+            const otpResponse = await axios.post('https://shift-backend.onrender.com/auth/otp', {
+                'phone': formProps["phone"]
+            });
+        }
+        catch (error) {
+            console.error('Ошибка:', error);
+        }
+
+    }
+
+</script>
+
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>formCode</title>
+    <link href="formCode.css" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="content">
+        <h2 class="enterace">Вход</h2>
+        <p class="text">Введите проверочный код для входа<br>в личный кабинет</p>
+        <form id="formach" method="post">
+            <input class="tel" type="number" name="phone" id="tel" placeholder="Телефон" required
+                oninvalid="this.setCustomValidity('Поле является обязательным')" oninput="setCustomValidity('')">
+            <input class="code" type="number" name="code" min="100000" max="999999" id="code"
+                placeholder="Проверочный код" required oninvalid="this.setCustomValidity('Код должен содержать 6 цифр')"
+                oninput="setCustomValidity('')">
+        </form>
+        <button class="but" type="submit" form="formach">Войти</button>
+
+        <div class="timer" id="timer"></div>
+        <button class="resendButton" id="resendButton">Запросить код повторно</button>
+
+    </div>
+
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    function getURLParameters() {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+
+        const params = {};
+
+        for (const [key, value] of urlParams.entries()) {
+            params[key] = value;
+        }
+
+        return parseInt(params.phone);
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        const phoneInput = document.getElementById('tel');
+        phoneInput.value = getURLParameters();
+    });
+
+    let countdown;
+    const resendButton = document.getElementById('resendButton');
+    const timerDisplay = document.getElementById('timer');
+
+    requestCode();
+
+    function requestCode() {
+        startCountdown(39);
+    }
+
+    function startCountdown(seconds) {
+        let remainingTime = seconds;
+
+        resendButton.style.display = 'none';
+        timerDisplay.textContent = `Запросить код повторно можно через ${remainingTime} секунд.`;
+
+        countdown = setInterval(() => {
+            remainingTime--;
+            timerDisplay.textContent = `Запросить код повторно можно через ${remainingTime} секунд.`;
+
+            if (remainingTime <= 0) {
+                clearInterval(countdown);
+                timerDisplay.textContent = '';
+                resendButton.style.display = 'block';
+            }
+        }, 1000);
+    }
+
+    resendButton.addEventListener('click', function () {
+        requestCode();
+    });
+
+    const formach = document.getElementById("formach");
+    formach.addEventListener("submit", handleSubmit);
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const formProps = Object.fromEntries(formData);
+
+        try {
+            const otpResponse = await axios.post('https://shift-backend.onrender.com/users/signin', {
+                'phone': formProps["phone"],
+                'code': parseInt(formProps["code"])
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const tokenn = otpResponse.data.token;
+        }
+        catch (error) {
+            console.error('Ошибка:', error);
+        }
+
+        try {
+            const sessionResponse = await axios.post('https://shift-backend.onrender.com/users/session', null, {
+                headers: {
+                    Authorization: `Bearer ${tokenn}`
+                }
+            });
+        }
+        catch (error) {
+            console.error('Ошибка:', error);
+        }
+
+    }
+
+</script>
+
+</html>
